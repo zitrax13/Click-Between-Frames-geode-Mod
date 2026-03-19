@@ -1,4 +1,4 @@
-name: Build Geode Mod (Android)
+name: Build Geode Mod
 
 on:
   push:
@@ -23,14 +23,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Исправлено: используем @main, так как тега @v2 не существует
       - name: Setup Geode SDK
-        uses: geode-sdk/setup-geode@v2
+        uses: geode-sdk/setup-geode@main
         with:
-          # Указываем версию SDK явно (из твоего mod.json)
           sdk: v3.0.0-beta.1
 
+      # Исправлено: используем @main, так как тега @v3 не существует
       - name: Build Geode Mod
-        uses: geode-sdk/build-geode-mod@v3
+        uses: geode-sdk/build-geode-mod@main
         with:
           target: ${{ matrix.config.target }}
           combine: true
