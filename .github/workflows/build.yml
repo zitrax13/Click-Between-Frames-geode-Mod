@@ -7,12 +7,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - name: Android32
+        - name: Android
           os: ubuntu-latest
-          target: Android32
-        - name: Android64
-          os: ubuntu-latest
-          target: Android64
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -20,14 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Geode
-        # ВНИМАНИЕ: Здесь добавлено -sdk и версия @v2
-        uses: geode-sdk/setup-geode-sdk@v2
-
+      # Один-единственный экшен, который сам скачает всё нужное
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
           bindings: geode-sdk/bindings
           bindings-ref: main
-          target: ${{ matrix.config.target }}
           combine: true
+          target: Android
+          
