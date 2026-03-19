@@ -11,6 +11,7 @@ class $modify(CBFMod, GJBaseGameLayer) {
         
         log::info("Click detected! Down: {}, Button: {}", down, button);
         
-        GJBaseGameLayer::handleButton(down, button, player1);
+        $GJBaseGameLayer::handleButton(down, button, player1);
+
     }
 };
