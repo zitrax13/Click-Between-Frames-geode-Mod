@@ -7,14 +7,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - name: Windows
-          os: windows-latest
-        - name: Android32
+        - name: Android
           os: ubuntu-latest
-          target: Android32
-        - name: Android64
-          os: ubuntu-latest
-          target: Android64
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -30,5 +24,4 @@ jobs:
         with:
           bindings: geode-sdk/bindings
           bindings-ref: main
-          target: ${{ matrix.config.target }}
           combine: true
