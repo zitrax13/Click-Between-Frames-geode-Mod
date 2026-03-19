@@ -23,12 +23,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Мы заставляем экшен СНАЧАЛА полностью настроить SDK
+      # Этот шаг устанавливает Geode CLI и SDK
+      # После него CMake на 6-й строке УВИДИТ GeodeConfig.cmake
+      - name: Setup Geode
+        uses: geode-sdk/setup-geode@main
+        with:
+          sdk: v3.0.0-beta.1
+
       - name: Build Geode Mod
         uses: geode-sdk/build-geode-mod@main
         with:
           target: ${{ matrix.config.target }}
-          # Важный момент: указываем версию из твоего mod.json
-          sdk: v3.0.0-beta.1
           combine: true
-          
