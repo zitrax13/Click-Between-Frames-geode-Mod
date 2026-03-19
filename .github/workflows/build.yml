@@ -9,7 +9,6 @@ jobs:
         config:
         - name: Android
           os: ubuntu-latest
-          target: Android
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -17,14 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ИСПРАВЛЕННЫЙ ПУТЬ: здесь добавлено -sdk и @v2
-      - name: Setup Geode
-        uses: geode-sdk/setup-geode-sdk@v2
-
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
           bindings: geode-sdk/bindings
           bindings-ref: main
           combine: true
-          target: ${{ matrix.config.target }}
+          target: Android
