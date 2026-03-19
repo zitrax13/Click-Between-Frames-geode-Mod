@@ -1,0 +1,16 @@
+{
+	"geode": "3.0.0-beta.1",
+	"gd": "2.2081",
+	"id": "zitrax13.click_between_frames",
+	"version": "1.0.0",
+	"name": "Click Between Frames",
+	"developer": "zitrax13",
+	"description": "Позволяет регистрировать клики между кадрами в 2.2081.",
+	"settings": {
+		"enabled": {
+			"name": "Включено",
+			"type": "bool",
+			"default": true
+		}
+	}
+}
