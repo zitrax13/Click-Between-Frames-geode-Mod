@@ -9,6 +9,7 @@ jobs:
         config:
         - name: Android
           os: ubuntu-latest
+          target: Android
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -16,12 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Один-единственный экшен, который сам скачает всё нужное
+      - name: Setup Geode
+        uses: geode-sdk/setup-geode@main
+
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
           bindings: geode-sdk/bindings
           bindings-ref: main
           combine: true
-          target: Android
-          
+          # ВОТ ЭТА СТРОЧКА ИСПРАВЛЯЕТ ОШИБКУ СО СКРИНА:
+          target: ${{ matrix.config.target }}
