@@ -9,7 +9,6 @@ jobs:
         config:
         - name: Android
           os: ubuntu-latest
-          target: Android
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -23,5 +22,5 @@ jobs:
           bindings: geode-sdk/bindings
           bindings-ref: main
           combine: true
-          # ПРЯМОЕ УКАЗАНИЕ ПЛАТФОРМЫ:
-          target: ${{ matrix.config.target }}
+          # ВОТ ЭТА СТРОЧКА ВСЁ ИСПРАВИТ:
+          target: Android
