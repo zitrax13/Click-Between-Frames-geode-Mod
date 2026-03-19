@@ -21,10 +21,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Geode
-        uses: geode-sdk/setup-geode@v2.0
-        with:
-          # Это скачает нужные инструменты автоматически
-          install-cli: true
+        uses: geode-sdk/setup-geode@v3.0
 
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
