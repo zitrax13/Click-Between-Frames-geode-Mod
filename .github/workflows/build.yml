@@ -20,9 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build the mod
+      # 1. Устанавливаем сам Geode SDK (БЕЗ ЭТОГО НЕ РАБОТАЕТ)
+      - name: Setup Geode
+        uses: geode-sdk/setup-geode@v3.0
+
+      # 2. Собираем мод
+      - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
-          # Этот параметр объединяет бинарники в один .geode файл
-          combine: true
+          bindings: geode-sdk/bindings
+          bindings-ref: main
           target: ${{ matrix.config.target }}
+          combine: true
+          
