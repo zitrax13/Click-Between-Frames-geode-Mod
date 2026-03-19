@@ -21,7 +21,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Geode
-        uses: geode-sdk/setup-geode-sdk@v3.0
+        uses: geode-sdk/setup-geode@v2.0
+        with:
+          # Это скачает нужные инструменты автоматически
+          install-cli: true
 
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
@@ -30,4 +33,3 @@ jobs:
           bindings-ref: main
           target: ${{ matrix.config.target }}
           combine: true
-          
