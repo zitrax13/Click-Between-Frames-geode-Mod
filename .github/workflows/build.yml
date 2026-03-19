@@ -10,5 +10,7 @@ jobs:
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
-          combine: true
+          # Указываем платформу Android напрямую без переменных
           target: Android
+          combine: true
+          
