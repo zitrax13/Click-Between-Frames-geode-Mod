@@ -3,7 +3,7 @@ name: Build Geode Mod (Android)
 on:
   push:
     branches: ["main", "master"]
-  workflow_dispatch: # Позволяет запустить сборку кнопкой в браузере
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,34 +23,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Geode SDK
+        uses: geode-sdk/setup-geode@v2
+        with:
+          # Указываем версию SDK явно (из твоего mod.json)
+          sdk: v3.0.0-beta.1
+
       - name: Build Geode Mod
-        uses: geode-sdk/build-geode-mod@main
+        uses: geode-sdk/build-geode-mod@v3
         with:
           target: ${{ matrix.config.target }}
-          combine: true # Подготавливает файлы для объединения в один .geode
-
-  package:
-    name: Package and Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: success()
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Merge and Release
-        uses: geode-sdk/build-geode-mod/combine@main
-        id: build
-        with:
-          # Если вам нужен релиз, укажите токен (обычно создается сам)
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ${{ steps.build.outputs.build-output }}
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          draft: true # Создаст черновик, чтобы вы проверили перед публикацией
-          generate_release_notes: true
+          combine: true
