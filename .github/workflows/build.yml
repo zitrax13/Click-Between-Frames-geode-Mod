@@ -23,15 +23,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Исправлено: используем @main, так как тега @v2 не существует
-      - name: Setup Geode SDK
-        uses: geode-sdk/setup-geode@main
-        with:
-          sdk: v3.0.0-beta.1
-
-      # Исправлено: используем @main, так как тега @v3 не существует
       - name: Build Geode Mod
         uses: geode-sdk/build-geode-mod@main
         with:
+          # Экшен сам скачает нужный SDK на основе твоего mod.json
           target: ${{ matrix.config.target }}
           combine: true
