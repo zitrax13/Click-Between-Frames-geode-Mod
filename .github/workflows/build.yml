@@ -23,11 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Этот шаг гарантирует, что SDK будет найден CMake-ом
       - name: Build Geode Mod
         uses: geode-sdk/build-geode-mod@main
         with:
           target: ${{ matrix.config.target }}
-          # Явно просим экшен настроить окружение
-          setup-sdk: true
+          # Указываем версию явно, чтобы экшен принудительно скачал SDK
+          sdk: v3.0.0-beta.1
           combine: true
