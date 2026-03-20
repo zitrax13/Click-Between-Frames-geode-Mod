@@ -1,4 +1,4 @@
-name: Build Geode Mod
+name: Build Geode Mod for Android
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,48 +16,46 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zip unzip wget
+          sudo apt-get install -y cmake ninja-build zip unzip wget curl
 
-      - name: Setup Geode CLI
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+          add-to-path: false
+        id: setup-ndk
+
+      - name: Install Geode CLI
         run: |
-          # Скачиваем Geode CLI (замените URL на актуальный)
-          wget -O geode.zip https://github.com/geode-sdk/cli/releases/latest/download/geode-cli-linux.zip
-          unzip geode.zip -d geode-cli
-          echo "${{ github.workspace }}/geode-cli" >> $GITHUB_PATH
+          # Официальный скрипт установки Geode CLI
+          curl -fsSL https://geode-sdk.org/install.sh | sh
+          echo "$HOME/.geode/bin" >> $GITHUB_PATH
 
       - name: Cache Geode SDK
         uses: actions/cache@v4
         id: cache-geode-sdk
         with:
           path: ~/.geode
-          key: ${{ runner.os }}-geode-sdk
+          key: ${{ runner.os }}-geode-sdk-android-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-geode-sdk-android-
 
-      - name: Install Geode SDK (if not cached)
+      - name: Install Geode SDK for Android
         if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
-        run: geode sdk install
-
-      - name: Configure and build mod
         run: |
-          # Создаём папку для сборки, если её нет
-          mkdir -p build
-          cd build
-          # Конфигурируем CMake с Geode toolchain
-          cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=~/geode-sdk/toolchain.in
-          # Собираем мод
-          cmake --build . --config Release
+          geode sdk install-linux
+          geode sdk install-binaries -p android
 
-      - name: Package .geode file
+      - name: Build mod for Android
         run: |
-          # Geode CLI может создать .geode файл из собранной библиотеки
-          # Предполагается, что после сборки в build/ лежит libyourmod.so или подобный
-          geode package build/libyourmod.so --output yourmod.geode
-          # Если у вас есть дополнительные ресурсы, укажите их через --resources
+          # Собираем для Android arm64-v8a (можно изменить на armeabi-v7a)
+          geode build --platform android --abi arm64-v8a --ninja
 
-      - name: Upload artifact
+      - name: Upload .geode artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yourmod-geode
-          path: yourmod.geode
+          name: mod-android
+          path: build/*.geode
