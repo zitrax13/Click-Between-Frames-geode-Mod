@@ -26,8 +26,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Geode
+        uses: geode-sdk/setup-geode@main
+
       - name: Build Mod
         uses: geode-sdk/build-geode-mod@main
         with:
-          sdk: v3.0.0-beta.1
           target: ${{ matrix.config.target }}
+          combine: true
