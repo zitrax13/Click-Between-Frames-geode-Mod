@@ -19,7 +19,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zip unzip wget curl
+          sudo apt-get install -y cmake ninja-build zip unzip wget curl jq
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -28,11 +28,25 @@ jobs:
           add-to-path: false
         id: setup-ndk
 
+      - name: Set Android NDK environment
+        run: echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+
       - name: Install Geode CLI
         run: |
-          # Официальный скрипт установки Geode CLI
-          curl -fsSL https://geode-sdk.org/install.sh | sh
+          # Получаем URL последнего релиза для Linux (имя файла: geode-cli-linux)
+          LATEST_URL=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest | jq -r '.assets[] | select(.name == "geode-cli-linux") | .browser_download_url')
+          if [ -z "$LATEST_URL" ]; then
+            echo "Could not find geode-cli-linux asset"
+            exit 1
+          fi
+          wget -O geode-cli "$LATEST_URL"
+          chmod +x geode-cli
+          mkdir -p $HOME/.geode/bin
+          mv geode-cli $HOME/.geode/bin/
           echo "$HOME/.geode/bin" >> $GITHUB_PATH
+
+      - name: Verify Geode CLI
+        run: geode --version
 
       - name: Cache Geode SDK
         uses: actions/cache@v4
@@ -51,7 +65,7 @@ jobs:
 
       - name: Build mod for Android
         run: |
-          # Собираем для Android arm64-v8a (можно изменить на armeabi-v7a)
+          # Сборка под Android arm64-v8a
           geode build --platform android --abi arm64-v8a --ninja
 
       - name: Upload .geode artifact
