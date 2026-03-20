@@ -2,32 +2,62 @@ name: Build Geode Mod
 
 on:
   push:
-    branches:
-      - "**"
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - "**"
+    branches: [ main ]
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: Android32
-            target: Android32
-          - name: Android64
-            target: Android64
-
-    name: ${{ matrix.config.name }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Build Mod
-        uses: geode-sdk/build-geode-mod@main
         with:
-          target: ${{ matrix.config.target }}
-          combine: true
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build zip unzip wget
+
+      - name: Setup Geode CLI
+        run: |
+          # Скачиваем Geode CLI (замените URL на актуальный)
+          wget -O geode.zip https://github.com/geode-sdk/cli/releases/latest/download/geode-cli-linux.zip
+          unzip geode.zip -d geode-cli
+          echo "${{ github.workspace }}/geode-cli" >> $GITHUB_PATH
+
+      - name: Cache Geode SDK
+        uses: actions/cache@v4
+        id: cache-geode-sdk
+        with:
+          path: ~/.geode
+          key: ${{ runner.os }}-geode-sdk
+
+      - name: Install Geode SDK (if not cached)
+        if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
+        run: geode sdk install
+
+      - name: Configure and build mod
+        run: |
+          # Создаём папку для сборки, если её нет
+          mkdir -p build
+          cd build
+          # Конфигурируем CMake с Geode toolchain
+          cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=~/geode-sdk/toolchain.in
+          # Собираем мод
+          cmake --build . --config Release
+
+      - name: Package .geode file
+        run: |
+          # Geode CLI может создать .geode файл из собранной библиотеки
+          # Предполагается, что после сборки в build/ лежит libyourmod.so или подобный
+          geode package build/libyourmod.so --output yourmod.geode
+          # Если у вас есть дополнительные ресурсы, укажите их через --resources
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yourmod-geode
+          path: yourmod.geode
