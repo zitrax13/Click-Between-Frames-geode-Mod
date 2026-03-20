@@ -26,12 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Geode CLI
-        uses: geode-sdk/setup-geode@v3
-
       - name: Build Mod
-        uses: geode-sdk/build-geode-mod@v3
+        uses: geode-sdk/build-geode-mod@main
         with:
           bindings-update: true
           target: ${{ matrix.config.target }}
-          output-binary: true
+          combine: true
