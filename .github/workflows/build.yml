@@ -1,6 +1,12 @@
 name: Build Geode Mod
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
 
 jobs:
   build:
@@ -12,16 +18,20 @@ jobs:
             target: Android32
           - name: Android64
             target: Android64
+
+    name: ${{ matrix.config.name }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Geode Mod
-        uses: geode-sdk/build-geode-mod@main
+      - name: Setup Geode CLI
+        uses: geode-sdk/setup-geode@v3
+
+      - name: Build Mod
+        uses: geode-sdk/build-geode-mod@v3
         with:
+          bindings-update: true
           target: ${{ matrix.config.target }}
-          # Вот эта строка заменит сломанный setup-geode:
-          sdk: v3.0.0-beta.1
-          combine: true
+          output-binary: true
