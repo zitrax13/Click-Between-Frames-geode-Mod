@@ -32,6 +32,7 @@ jobs:
         run: echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Install Geode CLI
+        id: install-geode
         run: |
           RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
           echo "Available assets:"
@@ -68,12 +69,19 @@ jobs:
           chmod +x geode-cli
           mkdir -p $HOME/.geode/bin
           mv geode-cli $HOME/.geode/bin/
-          echo "$HOME/.geode/bin" >> $GITHUB_PATH
+          
+          # Сохраняем абсолютный путь к geode
+          GEODE_PATH="$HOME/.geode/bin/geode-cli"
+          echo "GEODE_PATH=$GEODE_PATH" >> $GITHUB_ENV
+          echo "GEODE=$GEODE_PATH" >> $GITHUB_ENV
+          
+          # Проверяем, что файл существует и исполняемый
+          if [ ! -x "$GEODE_PATH" ]; then
+            echo "Geode CLI not found at $GEODE_PATH"
+            exit 1
+          fi
           
           rm -rf geode-cli-temp geode-cli.zip
-
-      - name: Verify Geode CLI
-        run: geode --version
 
       - name: Cache Geode SDK
         uses: actions/cache@v4
@@ -87,12 +95,12 @@ jobs:
       - name: Install Geode SDK for Android
         if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
         run: |
-          geode sdk install-linux
-          geode sdk install-binaries -p android
+          $GEODE sdk install-linux
+          $GEODE sdk install-binaries -p android
 
       - name: Build mod for Android
         run: |
-          geode build --platform android --abi arm64-v8a --ninja
+          $GEODE build --platform android --abi arm64-v8a --ninja
 
       - name: Upload .geode artifact
         uses: actions/upload-artifact@v4
