@@ -1,13 +1,22 @@
-name: Build Geode Mod for Android
+name: Build Geode Mod (Android)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master ]
+    tags:
+      - '*'
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  build-android:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - android32
+          - android64
     runs-on: ubuntu-latest
 
     steps:
@@ -16,60 +25,41 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zip unzip wget curl jq
-
-      - name: Setup Android NDK
-        uses: nttld/setup-ndk@v1
+      - name: Setup Geode CLI
+        uses: geode-sdk/setup-geode@v1
         with:
-          ndk-version: r26d
-          add-to-path: false
-        id: setup-ndk
-
-      - name: Set Android NDK environment
-        run: echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-
-      - name: Install Geode CLI
-        run: |
-          # Получаем URL последнего релиза для Linux (имя файла: geode-cli-linux)
-          LATEST_URL=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest | jq -r '.assets[] | select(.name == "geode-cli-linux") | .browser_download_url')
-          if [ -z "$LATEST_URL" ]; then
-            echo "Could not find geode-cli-linux asset"
-            exit 1
-          fi
-          wget -O geode-cli "$LATEST_URL"
-          chmod +x geode-cli
-          mkdir -p $HOME/.geode/bin
-          mv geode-cli $HOME/.geode/bin/
-          echo "$HOME/.geode/bin" >> $GITHUB_PATH
-
-      - name: Verify Geode CLI
-        run: geode --version
+          cli: true
+          sdk: true
 
       - name: Cache Geode SDK
-        uses: actions/cache@v4
-        id: cache-geode-sdk
+        uses: actions/cache@v3
         with:
           path: ~/.geode
-          key: ${{ runner.os }}-geode-sdk-android-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-geode-${{ hashFiles('**/geode.cache') }}
           restore-keys: |
-            ${{ runner.os }}-geode-sdk-android-
+            ${{ runner.os }}-geode-
 
-      - name: Install Geode SDK for Android
-        if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
-        run: |
-          geode sdk install-linux
-          geode sdk install-binaries -p android
+      - name: Build mod for ${{ matrix.platform }}
+        run: geode build ${{ matrix.platform }}
 
-      - name: Build mod for Android
-        run: |
-          # Сборка под Android arm64-v8a
-          geode build --platform android --abi arm64-v8a --ninja
-
-      - name: Upload .geode artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mod-android
+          name: geode-mod-${{ matrix.platform }}
           path: build/*.geode
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*.geode
+          generate_release_notes: true
