@@ -19,7 +19,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zip unzip wget curl jq
+          sudo apt-get install -y cmake ninja-build zip unzip wget curl jq clang
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -37,9 +37,7 @@ jobs:
           echo "Available assets:"
           echo "$RELEASE_DATA" | jq -r '.assets[].name'
           
-          # Ищем ассет, содержащий "linux" (например, geode-cli-v3.7.4-linux.zip)
           ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux")) | .name' | head -n1)
-          
           if [ -z "$ASSET_NAME" ]; then
             echo "No Linux asset found. Exiting."
             exit 1
@@ -48,24 +46,21 @@ jobs:
           echo "Downloading $ASSET_NAME"
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
           wget -O geode-cli.zip "$DOWNLOAD_URL"
-          
-          # Распаковываем архив
           unzip geode-cli.zip -d geode-cli-temp
           echo "Contents of archive:"
           ls -la geode-cli-temp/
           
-          # Предполагаем, что исполняемый файл называется geode-cli или похоже
-          if [ -f "geode-cli-temp/geode-cli" ]; then
+          # Ищем исполняемый файл
+          if [ -f "geode-cli-temp/geode" ]; then
+            mv geode-cli-temp/geode geode-cli
+          elif [ -f "geode-cli-temp/geode-cli" ]; then
             mv geode-cli-temp/geode-cli geode-cli
-          elif [ -f "geode-cli-temp/geode-cli-linux" ]; then
-            mv geode-cli-temp/geode-cli-linux geode-cli
           else
-            # Если имя другое, берём первый исполняемый файл (исключая папки)
-            CLI_FILE=$(find geode-cli-temp -type f -executable | head -n1)
+            CLI_FILE=$(find geode-cli-temp -type f | head -n1)
             if [ -n "$CLI_FILE" ]; then
               mv "$CLI_FILE" geode-cli
             else
-              echo "Could not find executable in archive"
+              echo "Could not find any file in archive"
               exit 1
             fi
           fi
@@ -75,7 +70,6 @@ jobs:
           mv geode-cli $HOME/.geode/bin/
           echo "$HOME/.geode/bin" >> $GITHUB_PATH
           
-          # Очистка
           rm -rf geode-cli-temp geode-cli.zip
 
       - name: Verify Geode CLI
