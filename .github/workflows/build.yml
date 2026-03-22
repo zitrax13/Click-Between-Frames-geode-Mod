@@ -33,13 +33,22 @@ jobs:
 
       - name: Install Geode CLI
         run: |
-          # Получаем URL последнего релиза для Linux (имя файла: geode-cli-linux)
-          LATEST_URL=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest | jq -r '.assets[] | select(.name == "geode-cli-linux") | .browser_download_url')
-          if [ -z "$LATEST_URL" ]; then
-            echo "Could not find geode-cli-linux asset"
+          # Получаем данные последнего релиза
+          RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
+          echo "Available assets:"
+          echo "$RELEASE_DATA" | jq -r '.assets[].name'
+          
+          # Ищем ассет для Linux (содержит "linux" и, возможно, "x86_64")
+          ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux.*x86_64") or test("linux$")) | .name' | head -n1)
+          
+          if [ -z "$ASSET_NAME" ]; then
+            echo "No Linux asset found. Exiting."
             exit 1
           fi
-          wget -O geode-cli "$LATEST_URL"
+          
+          echo "Downloading $ASSET_NAME"
+          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
+          wget -O geode-cli "$DOWNLOAD_URL"
           chmod +x geode-cli
           mkdir -p $HOME/.geode/bin
           mv geode-cli $HOME/.geode/bin/
@@ -65,7 +74,6 @@ jobs:
 
       - name: Build mod for Android
         run: |
-          # Сборка под Android arm64-v8a
           geode build --platform android --abi arm64-v8a --ninja
 
       - name: Upload .geode artifact
