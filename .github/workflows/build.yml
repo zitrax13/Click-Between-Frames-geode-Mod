@@ -31,11 +31,8 @@ jobs:
       - name: Set environment variables
         run: |
           echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-          echo "GEODE_SDK=$HOME/.geode" >> $GITHUB_ENV
-          echo "GEODE_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Install Geode CLI
-        id: install-geode
         run: |
           RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
           ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux")) | .name' | head -n1)
@@ -46,17 +43,11 @@ jobs:
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
           wget -O geode-cli.zip "$DOWNLOAD_URL"
           unzip geode-cli.zip -d geode-cli-temp
-          # В архиве может быть файл с именем geode или geode-cli
-          if [ -f "geode-cli-temp/geode" ]; then
-            mv geode-cli-temp/geode geode-cli
-          elif [ -f "geode-cli-temp/geode-cli" ]; then
-            mv geode-cli-temp/geode-cli geode-cli
-          else
-            find geode-cli-temp -type f -executable | head -n1 | xargs -I {} mv {} geode-cli
-          fi
-          chmod +x geode-cli
+          # В архиве файл называется geode
+          mv geode-cli-temp/geode geode
+          chmod +x geode
           mkdir -p $HOME/.geode/bin
-          mv geode-cli $HOME/.geode/bin/
+          mv geode $HOME/.geode/bin/
           echo "$HOME/.geode/bin" >> $GITHUB_PATH
           rm -rf geode-cli-temp geode-cli.zip
 
@@ -73,7 +64,6 @@ jobs:
         if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
         run: |
           geode sdk install-linux
-          # Для Android нужны бинарники Windows (для кросс-компиляции)
           geode sdk install-binaries -p android
 
       - name: Debug info
