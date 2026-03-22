@@ -14,9 +14,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - android32
-          - android64
+        target:
+          - Android32
+          - Android64
     runs-on: ubuntu-latest
 
     steps:
@@ -25,30 +25,18 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Build Geode Mod
+        uses: geode-sdk/build-geode-mod@main
         with:
-          toolchain: stable
-          override: true
-
-      - name: Install Geode CLI
-        run: cargo install geode-cli
-
-      - name: Cache Geode SDK
-        uses: actions/cache@v3
-        with:
-          path: ~/.geode
-          key: ${{ runner.os }}-geode-${{ hashFiles('**/geode.cache') }}
-          restore-keys: |
-            ${{ runner.os }}-geode-
-
-      - name: Build mod for ${{ matrix.platform }}
-        run: geode build ${{ matrix.platform }}
+          target: ${{ matrix.target }}
+          # sdk: latest           # можно указать 'latest' или 'nightly'
+          # cli: latest           # можно указать версию CLI
+          # build-config: Release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: geode-mod-${{ matrix.platform }}
+          name: geode-mod-${{ matrix.target }}
           path: build/*.geode
 
   release:
