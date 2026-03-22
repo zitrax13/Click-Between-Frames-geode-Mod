@@ -25,13 +25,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Install Geode CLI
-        run: pip install geode-cli
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/geode-sdk/cli/main/install.sh | sh
+          echo "$HOME/.geode/bin" >> $GITHUB_PATH
 
       - name: Cache Geode SDK
         uses: actions/cache@v3
