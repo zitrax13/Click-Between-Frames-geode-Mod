@@ -19,7 +19,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zip unzip wget curl jq clang
+          sudo apt-get install -y cmake ninja-build zip unzip wget curl clang
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -29,27 +29,26 @@ jobs:
         id: setup-ndk
 
       - name: Set environment variables
-        run: |
-          echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+        run: echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Install Geode CLI
         run: |
-          RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
-          ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux")) | .name' | head -n1)
-          if [ -z "$ASSET_NAME" ]; then
-            echo "No Linux asset found."
+          # Скачиваем последний Linux‑архив Geode CLI
+          LATEST_URL=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest | grep -o 'https://github.com/geode-sdk/cli/releases/download/.*/geode-cli-.*-linux.zip' | head -n1)
+          if [ -z "$LATEST_URL" ]; then
+            echo "Could not find download URL"
             exit 1
           fi
-          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
-          wget -O geode-cli.zip "$DOWNLOAD_URL"
-          unzip geode-cli.zip -d geode-cli-temp
-          # В архиве файл называется geode
-          mv geode-cli-temp/geode geode
+          wget -O geode-cli.zip "$LATEST_URL"
+          unzip geode-cli.zip
           chmod +x geode
           mkdir -p $HOME/.geode/bin
           mv geode $HOME/.geode/bin/
           echo "$HOME/.geode/bin" >> $GITHUB_PATH
-          rm -rf geode-cli-temp geode-cli.zip
+          rm geode-cli.zip
+
+      - name: Verify Geode CLI
+        run: geode --version
 
       - name: Cache Geode SDK
         uses: actions/cache@v4
@@ -66,20 +65,8 @@ jobs:
           geode sdk install-linux
           geode sdk install-binaries -p android
 
-      - name: Debug info
-        run: |
-          echo "=== Geode CLI version ==="
-          geode --version
-          echo "=== Geode SDK path ==="
-          ls -la ~/.geode || true
-          echo "=== Cross-tools path ==="
-          ls -la ~/.local/share/Geode/cross-tools/ || true
-          echo "=== Android NDK path ==="
-          ls -la $ANDROID_NDK || true
-
       - name: Build mod for Android
-        run: |
-          geode build --platform android --abi arm64-v8a --ninja
+        run: geode build --platform android --abi arm64-v8a --ninja
 
       - name: Upload .geode artifact
         uses: actions/upload-artifact@v4
