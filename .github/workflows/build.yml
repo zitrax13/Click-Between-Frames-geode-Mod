@@ -28,56 +28,36 @@ jobs:
           add-to-path: false
         id: setup-ndk
 
-      - name: Set Android NDK environment
-        run: echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+      - name: Set environment variables
+        run: |
+          echo "ANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+          echo "GEODE_SDK=$HOME/.geode" >> $GITHUB_ENV
+          echo "GEODE_NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Install Geode CLI
         id: install-geode
         run: |
           RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
-          echo "Available assets:"
-          echo "$RELEASE_DATA" | jq -r '.assets[].name'
-          
           ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux")) | .name' | head -n1)
           if [ -z "$ASSET_NAME" ]; then
-            echo "No Linux asset found. Exiting."
+            echo "No Linux asset found."
             exit 1
           fi
-          
-          echo "Downloading $ASSET_NAME"
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
           wget -O geode-cli.zip "$DOWNLOAD_URL"
           unzip geode-cli.zip -d geode-cli-temp
-          echo "Contents of archive:"
-          ls -la geode-cli-temp/
-          
+          # В архиве может быть файл с именем geode или geode-cli
           if [ -f "geode-cli-temp/geode" ]; then
             mv geode-cli-temp/geode geode-cli
           elif [ -f "geode-cli-temp/geode-cli" ]; then
             mv geode-cli-temp/geode-cli geode-cli
           else
-            CLI_FILE=$(find geode-cli-temp -type f | head -n1)
-            if [ -n "$CLI_FILE" ]; then
-              mv "$CLI_FILE" geode-cli
-            else
-              echo "Could not find any file in archive"
-              exit 1
-            fi
+            find geode-cli-temp -type f -executable | head -n1 | xargs -I {} mv {} geode-cli
           fi
-          
           chmod +x geode-cli
           mkdir -p $HOME/.geode/bin
           mv geode-cli $HOME/.geode/bin/
-          
-          GEODE_PATH="$HOME/.geode/bin/geode-cli"
-          echo "GEODE_PATH=$GEODE_PATH" >> $GITHUB_ENV
-          echo "GEODE=$GEODE_PATH" >> $GITHUB_ENV
-          
-          if [ ! -x "$GEODE_PATH" ]; then
-            echo "Geode CLI not found at $GEODE_PATH"
-            exit 1
-          fi
-          
+          echo "$HOME/.geode/bin" >> $GITHUB_PATH
           rm -rf geode-cli-temp geode-cli.zip
 
       - name: Cache Geode SDK
@@ -92,18 +72,24 @@ jobs:
       - name: Install Geode SDK for Android
         if: steps.cache-geode-sdk.outputs.cache-hit != 'true'
         run: |
-          $GEODE sdk install-linux
-          $GEODE sdk install-binaries -p android
+          geode sdk install-linux
+          # Для Android нужны бинарники Windows (для кросс-компиляции)
+          geode sdk install-binaries -p android
 
-      - name: Set up Geode profile (if needed)
+      - name: Debug info
         run: |
-          # Попытка создать профиль; если профиль уже существует, команда не должна падать
-          $GEODE config setup --path "$HOME/.geode" --ndk "$ANDROID_NDK" --platform android || true
-          $GEODE config list
+          echo "=== Geode CLI version ==="
+          geode --version
+          echo "=== Geode SDK path ==="
+          ls -la ~/.geode || true
+          echo "=== Cross-tools path ==="
+          ls -la ~/.local/share/Geode/cross-tools/ || true
+          echo "=== Android NDK path ==="
+          ls -la $ANDROID_NDK || true
 
       - name: Build mod for Android
         run: |
-          $GEODE build --platform android --abi arm64-v8a --ninja
+          geode build --platform android --abi arm64-v8a --ninja
 
       - name: Upload .geode artifact
         uses: actions/upload-artifact@v4
