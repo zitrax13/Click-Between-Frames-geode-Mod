@@ -33,13 +33,12 @@ jobs:
 
       - name: Install Geode CLI
         run: |
-          # Получаем данные последнего релиза
           RELEASE_DATA=$(curl -s https://api.github.com/repos/geode-sdk/cli/releases/latest)
           echo "Available assets:"
           echo "$RELEASE_DATA" | jq -r '.assets[].name'
           
-          # Ищем ассет для Linux (содержит "linux" и, возможно, "x86_64")
-          ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux.*x86_64") or test("linux$")) | .name' | head -n1)
+          # Ищем ассет, содержащий "linux" (например, geode-cli-v3.7.4-linux.zip)
+          ASSET_NAME=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | test("linux")) | .name' | head -n1)
           
           if [ -z "$ASSET_NAME" ]; then
             echo "No Linux asset found. Exiting."
@@ -48,11 +47,36 @@ jobs:
           
           echo "Downloading $ASSET_NAME"
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
-          wget -O geode-cli "$DOWNLOAD_URL"
+          wget -O geode-cli.zip "$DOWNLOAD_URL"
+          
+          # Распаковываем архив
+          unzip geode-cli.zip -d geode-cli-temp
+          echo "Contents of archive:"
+          ls -la geode-cli-temp/
+          
+          # Предполагаем, что исполняемый файл называется geode-cli или похоже
+          if [ -f "geode-cli-temp/geode-cli" ]; then
+            mv geode-cli-temp/geode-cli geode-cli
+          elif [ -f "geode-cli-temp/geode-cli-linux" ]; then
+            mv geode-cli-temp/geode-cli-linux geode-cli
+          else
+            # Если имя другое, берём первый исполняемый файл (исключая папки)
+            CLI_FILE=$(find geode-cli-temp -type f -executable | head -n1)
+            if [ -n "$CLI_FILE" ]; then
+              mv "$CLI_FILE" geode-cli
+            else
+              echo "Could not find executable in archive"
+              exit 1
+            fi
+          fi
+          
           chmod +x geode-cli
           mkdir -p $HOME/.geode/bin
           mv geode-cli $HOME/.geode/bin/
           echo "$HOME/.geode/bin" >> $GITHUB_PATH
+          
+          # Очистка
+          rm -rf geode-cli-temp geode-cli.zip
 
       - name: Verify Geode CLI
         run: geode --version
