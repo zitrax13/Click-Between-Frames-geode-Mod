@@ -51,7 +51,6 @@ jobs:
           echo "Contents of archive:"
           ls -la geode-cli-temp/
           
-          # Ищем исполняемый файл
           if [ -f "geode-cli-temp/geode" ]; then
             mv geode-cli-temp/geode geode-cli
           elif [ -f "geode-cli-temp/geode-cli" ]; then
@@ -70,12 +69,10 @@ jobs:
           mkdir -p $HOME/.geode/bin
           mv geode-cli $HOME/.geode/bin/
           
-          # Сохраняем абсолютный путь к geode
           GEODE_PATH="$HOME/.geode/bin/geode-cli"
           echo "GEODE_PATH=$GEODE_PATH" >> $GITHUB_ENV
           echo "GEODE=$GEODE_PATH" >> $GITHUB_ENV
           
-          # Проверяем, что файл существует и исполняемый
           if [ ! -x "$GEODE_PATH" ]; then
             echo "Geode CLI not found at $GEODE_PATH"
             exit 1
@@ -97,6 +94,13 @@ jobs:
         run: |
           $GEODE sdk install-linux
           $GEODE sdk install-binaries -p android
+
+      - name: Setup Geode profile
+        run: |
+          # Создаём профиль по умолчанию, указывая путь к SDK и NDK
+          $GEODE config setup --path "$HOME/.geode" --ndk "$ANDROID_NDK" --platform android
+          # Проверяем, что профиль создался
+          $GEODE config list
 
       - name: Build mod for Android
         run: |
