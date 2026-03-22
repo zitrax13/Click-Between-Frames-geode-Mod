@@ -25,10 +25,14 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
       - name: Install Geode CLI
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/geode-sdk/cli/main/install.sh | sh
-          echo "$HOME/.geode/bin" >> $GITHUB_PATH
+        run: cargo install geode-cli
 
       - name: Cache Geode SDK
         uses: actions/cache@v3
