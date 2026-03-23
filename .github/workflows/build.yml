@@ -1,40 +1,32 @@
-name: Android Build
+name: Build Geode Mod
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build Android
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    # Используем версию v1, она проверенная!
-    - name: Setup Android NDK
-      uses: nndixon/setup-ndk@v1 
-      with:
-        ndk-version: r26b
+      - name: Setup NDK
+        uses: nndixon/setup-ndk@v1
+        with:
+          ndk-version: r26b
 
-    # Тут используем @main, так советуют разработчики Geode
-    - name: Setup Geode CLI
-      uses: geode-sdk/setup-geode@main
+      - name: Setup Geode CLI
+        uses: geode-sdk/setup-geode@main
 
-    # Собираем мод (версия @main самая свежая)
-    - name: Build Mod
-      uses: geode-sdk/build-geode-mod@main
-      with:
-        bindings-update: false
-        combine: true
-        target: 'android32 android64'
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: geode-android-mod
-        path: build-output/*.geode
+      - name: Build Mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          bindings-update: false
+          combine: true
+          target: 'android32 android64'
