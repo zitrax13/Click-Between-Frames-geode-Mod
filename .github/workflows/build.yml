@@ -1,4 +1,4 @@
-name: Android Build Manual
+name: Android Build
 
 on:
   push:
@@ -15,29 +15,26 @@ jobs:
       with:
         submodules: recursive
 
-    # 1. Устанавливаем Android NDK (версия 26b обычно нужна для Geode)
+    # Используем версию v1, она проверенная!
     - name: Setup Android NDK
-      uses: nndixon/setup-ndk@v1
+      uses: nndixon/setup-ndk@v1 
       with:
         ndk-version: r26b
 
-    # 2. Устанавливаем Geode CLI (тот самый инструмент командной строки)
+    # Тут используем @main, так советуют разработчики Geode
     - name: Setup Geode CLI
-      uses: geode-sdk/setup-geode@v2
+      uses: geode-sdk/setup-geode@main
 
-    # 3. Сама магия компиляции (Build Mod)
-    # Здесь робот Гитхаба вызывает компилятор C++ для Android
+    # Собираем мод (версия @main самая свежая)
     - name: Build Mod
-      uses: geode-sdk/build-geode-mod@v2
+      uses: geode-sdk/build-geode-mod@main
       with:
         bindings-update: false
-        # Собираем для 32-битных и 64-битных систем Android
-        target: 'android32 android64'
         combine: true
+        target: 'android32 android64'
 
-    # 4. Сохраняем готовый файл .geode как Артефакт
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: my-cool-android-mod
+        name: geode-android-mod
         path: build-output/*.geode
