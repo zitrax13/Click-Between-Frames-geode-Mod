@@ -10,16 +10,19 @@ jobs:
   build:
     name: Build Android
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Важно для доступа к репозиторию
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Setup NDK
         uses: nndixon/setup-ndk@v1
         with:
-          ndk-version: r26b
+          ndk-version: r25c # Самая стабильная версия для Geode Android
 
       - name: Setup Geode CLI
         uses: geode-sdk/setup-geode@main
@@ -30,3 +33,9 @@ jobs:
           bindings-update: false
           combine: true
           target: 'android32 android64'
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClickBetweenFrames-Android
+          path: build/*.geode
