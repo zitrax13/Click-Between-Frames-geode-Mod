@@ -21,7 +21,7 @@ jobs:
 
       # Используем стандартный экшен для NDK, который точно существует
       - name: Setup NDK
-        uses: nndixon/setup-ndk@v1
+        uses: ammaraskar/setup-ndk@v1
         with:
           ndk-version: r25c
 
