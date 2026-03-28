@@ -11,7 +11,7 @@ jobs:
     name: Build Android
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Важно для доступа к репозиторию
+      contents: write
 
     steps:
       - name: Checkout
@@ -19,10 +19,11 @@ jobs:
         with:
           submodules: recursive
 
+      # Используем стандартный экшен для NDK, который точно существует
       - name: Setup NDK
         uses: nndixon/setup-ndk@v1
         with:
-          ndk-version: r25c # Самая стабильная версия для Geode Android
+          ndk-version: r25c
 
       - name: Setup Geode CLI
         uses: geode-sdk/setup-geode@main
