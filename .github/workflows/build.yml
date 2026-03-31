@@ -1,4 +1,4 @@
-name: Build Geode Mod for Android
+name: Build Geode Mod for Android (Fixed)
 
 on:
   push:
@@ -14,12 +14,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Geode SDK for Android
-        uses: geode-sdk/build-geode-mod@main
-        id: build_android
+      - name: Install Android NDK (required for Geode Android builds)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-ndk
+
+      - name: Setup Geode SDK with explicit path
+        uses: geode-sdk/setup-geode@v1
+        id: setup_geode
         with:
+          version: latest
           target: Android64
-          sdk: latest
-          cli: latest
-          build-config: Release
-          export-symbols:
+
+      - name: Configure CMake with Geode path
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE="${{ steps.setup_geode.outputs.toolchain-file }}" \
+            -DGEODESDK_ROOT="${{ steps.setup_geode.outputs.sdk-path }}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-23
+
+      - name: Build project
+        run: |
+          cd build
+          make -j$(nproc)
+
+      - name: Package Geode mod
+        run: |
+          cd build
+          geode package
+
+      - name: Upload built .geode file
+        uses: actions/upload-artifact@v4
+        with:
+          name: geode-mod-android-${{ github.sha }}
+          path: |
+            build/*.geode
+            build/*.zip
+          retention-days: 30
