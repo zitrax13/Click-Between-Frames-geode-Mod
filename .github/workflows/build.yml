@@ -1,42 +1,25 @@
-name: Build Geode Mod
+name: Build Geode Mod for Android
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 jobs:
-  build:
-    name: Build Android
+  build-android:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      # Используем стандартный экшен для NDK, который точно существует
-      - name: Setup NDK
-        uses: ammaraskar/setup-ndk@v1
-        with:
-          ndk-version: r25c
-
-      - name: Setup Geode CLI
-        uses: geode-sdk/setup-geode@main
-
-      - name: Build Mod
+      - name: Setup Geode SDK for Android
         uses: geode-sdk/build-geode-mod@main
+        id: build_android
         with:
-          bindings-update: false
-          combine: true
-          target: 'android32 android64'
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ClickBetweenFrames-Android
-          path: build/*.geode
+          target: Android64
+          sdk: latest
+          cli: latest
+          build-config: Release
+          export-symbols:
