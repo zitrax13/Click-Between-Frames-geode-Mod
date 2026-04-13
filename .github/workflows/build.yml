@@ -1,57 +1,62 @@
-name: Build Geode Mod for Android (Fixed)
+name: Build Geode Mod
 
 on:
-  push:
-    branches: [main, master]
+  workflow_dispatch:
   pull_request:
-    branches: [main, master]
+  push:
+    branches:
+      - "release-*"
 
 jobs:
-  build-android:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: Windows
+          os: windows-latest
+        
+        - name: macOS
+          os: macos-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        - name: Android32
+          os: ubuntu-latest
+          target: Android32
 
-      - name: Install Android NDK (required for Geode Android builds)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-ndk
-
-      - name: Setup Geode SDK with explicit path
-        uses: geode-sdk/setup-geode@v1
-        id: setup_geode
-        with:
-          version: latest
+        - name: Android64
+          os: ubuntu-latest
           target: Android64
 
-      - name: Configure CMake with Geode path
-        run: |
-          mkdir -p build
-          cd build
-          cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE="${{ steps.setup_geode.outputs.toolchain-file }}" \
-            -DGEODESDK_ROOT="${{ steps.setup_geode.outputs.sdk-path }}" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DANDROID_ABI=arm64-v8a \
-            -DANDROID_PLATFORM=android-23
+        - name: iOS
+          os: macos-latest
+          target: iOS
 
-      - name: Build project
-        run: |
-          cd build
-          make -j$(nproc)
+        
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
 
-      - name: Package Geode mod
-        run: |
-          cd build
-          geode package
-
-      - name: Upload built .geode file
-        uses: actions/upload-artifact@v4
+    steps:
+      - uses: actions/checkout@v4
         with:
-          name: geode-mod-android-${{ github.sha }}
-          path: |
-            build/*.geode
-            build/*.zip
-          retention-days: 30
+          submodules: 'recursive'
+          
+      - name: Build the mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          bindings: geode-sdk/bindings
+          bindings-ref: main
+          combine: true
+          target: ${{ matrix.config.target }}
+
+  package:
+    name: Package builds
+    runs-on: ubuntu-latest
+    needs: ['build']
+    steps:
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Build Output
+          path: ${{ steps.build.outputs.build-output }}
