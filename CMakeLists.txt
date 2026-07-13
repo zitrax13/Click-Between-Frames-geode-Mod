@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.25)
 
 project(ClickBetweenFrames)
 
-# Указываем CMake взять готовый файл настроек, который Гитхаб уже распаковал
-include($ENV{GEODE_SDK}/cmake/GeodeMod.cmake)
+# Убрали /cmake/ из пути, так как в новом SDK файл лежит в корневой папке!
+include($ENV{GEODE_SDK}/GeodeMod.cmake)
 
 # Создаем библиотеку из твоего main.cpp
 add_library(${PROJECT_NAME} SHARED main.cpp)
