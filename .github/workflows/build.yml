@@ -20,13 +20,13 @@ jobs:
         with:
           ndk-version: r26b
 
-      # 2. ИСПРАВИЛИ: Качаем оригинальный архив через встроенную системную команду GitHub!
+      # 2. ИСПРАВИЛИ ИМЯ АРХИВА: убрали слово -linux, теперь gh мгновенно его скачает!
       - name: Install Geode CLI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v3.1.1 --repo geode-sdk/cli --pattern "geode-cli-linux.zip"
-          unzip geode-cli-linux.zip
+          gh release download v3.1.1 --repo geode-sdk/cli --pattern "geode-cli.zip"
+          unzip geode-cli.zip
           chmod +x geode
           sudo mv geode /usr/local/bin/
 
