@@ -20,10 +20,12 @@ jobs:
         with:
           ndk-version: r26b
 
-      # 2. ИСПРАВИЛИ СКАЧИВАНИЕ: теперь качаем прямую стабильную версию v3.1.1 и принудительно сохраняем как .zip!
+      # 2. ИСПРАВИЛИ: Качаем оригинальный архив через встроенную системную команду GitHub!
       - name: Install Geode CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          wget -O geode-cli-linux.zip https://github.com
+          gh release download v3.1.1 --repo geode-sdk/cli --pattern "geode-cli-linux.zip"
           unzip geode-cli-linux.zip
           chmod +x geode
           sudo mv geode /usr/local/bin/
