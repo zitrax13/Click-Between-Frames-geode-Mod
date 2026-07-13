@@ -12,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        # Оставляем ТОЛЬКО чистую сборку под процессор твоего Xiaomi Pad 7
         - name: Android64
           os: ubuntu-latest
           target: Android64
@@ -28,6 +27,8 @@ jobs:
         with:
           combine: true
           target: ${{ matrix.config.target }}
+          # ЭТОТ ПАРАМЕТР МЫ ДОБАВИЛИ: он заставит Geode CLI собрать проект самому, в обход капризов find_package!
+          cli: true
 
   package:
     name: Package builds
@@ -42,4 +43,3 @@ jobs:
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
-          
