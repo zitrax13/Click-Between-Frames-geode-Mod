@@ -4,14 +4,13 @@
 using namespace geode::prelude;
 
 class $modify(CBFMod, GJBaseGameLayer) {
-    void handleButton(bool down, int button, bool player1) {
-        // Логика CBF: фиксируем ввод независимо от FPS
-        // В версии 2.2081 мы просто вызываем оригинальную функцию,
-        // но здесь можно добавить расчет суб-тиков для точности
+    // В версии 2.207 используются PlayerButton и bool для зажатия кнопки
+    void handleButton(bool down, PlayerButton button, bool isPlayer2) {
         
-        log::info("Click detected! Down: {}, Button: {}", down, button);
-        
-        $GJBaseGameLayer::handleButton(down, button, player1);
+        // Логика CBF: выводим лог в консоль Geode при каждом клике
+        log::info("Click detected! Down: {}, Button: {}", down, static_cast<int>(button));
 
+        // Вызываем оригинальную функцию игры для 2.207
+        GJBaseGameLayer::handleButton(down, button, isPlayer2);
     }
 };
