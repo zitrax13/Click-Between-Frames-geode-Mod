@@ -20,10 +20,10 @@ jobs:
         with:
           ndk-version: r26b
 
-      # 2. Скачиваем чистый Geode CLI напрямую с GitHub релиза
+      # 2. ИСПРАВИЛИ СКАЧИВАНИЕ: теперь качаем прямую стабильную версию v3.1.1 и принудительно сохраняем как .zip!
       - name: Install Geode CLI
         run: |
-          wget https://github.com
+          wget -O geode-cli-linux.zip https://github.com
           unzip geode-cli-linux.zip
           chmod +x geode
           sudo mv geode /usr/local/bin/
@@ -34,11 +34,10 @@ jobs:
           geode profile add default
           geode sdk install v4.10.1
 
-      # 4. Запускаем чистую сборку CMake без капризных макросов!
+      # 4. Запускаем чистую сборку CMake
       - name: Build Mod
         run: |
           mkdir build
           cd build
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-30
           make
-          
