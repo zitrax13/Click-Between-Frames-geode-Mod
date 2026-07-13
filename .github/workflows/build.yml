@@ -29,11 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Вот этот самый главный шаг, который создаст нужные файлы для CMake!
-      - name: Setup Geode CLI
-        uses: geode-sdk/setup-geode@v2
-
-      # Этот шаг скомпилирует твой main.cpp
+      # Мы оставили только один этот главный шаг! Он сам скачает нужный CLI и всё соберёт
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:
