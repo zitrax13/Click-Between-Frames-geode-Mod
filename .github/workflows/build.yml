@@ -7,53 +7,20 @@ on:
       - "**"
 
 jobs:
-  build-linux-input:
-    name: Build linux-input.so
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y g++ libevdev-dev
-
-      - name: Build
-        working-directory: src/linux
-        run: |
-          mkdir -p ../../resources
-          g++ -O2 -o ../../resources/linux-input.so linux-input.cpp -levdev
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: linux-input.so
-          path: resources/linux-input.so
-
   build:
-    needs: ['build-linux-input']
     strategy:
       fail-fast: false
       matrix:
         config:
         - name: Windows
-          os: windows-latest
-
-        - name: macOS
-          os: macos-latest
-
-        - name: iOS
-          os: macos-latest
-          target: iOS
+          os: windows-2022
 
         - name: Android32
-          os: ubuntu-latest
+          os: ubuntu-22.04
           target: Android32
 
         - name: Android64
-          os: ubuntu-latest
+          os: ubuntu-22.04
           target: Android64
 
     name: ${{ matrix.config.name }}
@@ -62,18 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download linux-input.so
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-input.so
-          path: resources
-
       - name: Build the mod
-        uses: geode-sdk/build-geode-mod@main
+        uses: geode-sdk/build-geode-mod@v3
         with:
           combine: true
           target: ${{ matrix.config.target }}
-          # sdk: nightly
 
   package:
     name: Package builds
@@ -81,10 +41,11 @@ jobs:
     needs: ['build']
 
     steps:
-      - uses: geode-sdk/build-geode-mod/combine@main
+      - uses: geode-sdk/build-geode-mod/combine@v3
         id: build
 
       - uses: actions/upload-artifact@v4
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
+          
