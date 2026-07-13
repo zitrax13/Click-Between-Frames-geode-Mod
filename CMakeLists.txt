@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(ClickBetweenFrames)
+project(click_between_frames VERSION 1.0.0 LANGUAGES CXX)
 
-# Исправили строчку: убрали слово CONFIG, теперь CMake всё найдёт сам
-find_package(Geode REQUIRED)
+# Включаем официальный инструментарий Geode, который автоматически 
+# настроит все пути и решит проблему со строчкой find_package
+include(Geode)
 
-# Создаем библиотеку и подключаем твой main.cpp
 add_library(${PROJECT_NAME} SHARED main.cpp)
 
-# Главная функция Geode, которая собирает .geode файл
 setup_geode_mod(${PROJECT_NAME})
