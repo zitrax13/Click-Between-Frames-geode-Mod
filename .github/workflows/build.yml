@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+        # Собираем строго под 64-битный процессор твоего планшета Xiaomi
         - name: Android64
           os: ubuntu-latest
           target: Android64
@@ -23,12 +24,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build the mod
-        uses: geode-sdk/build-geode-mod@main
+        # Заменили капризный @main на стабильную версию v2, где исправлен баг 404
+        uses: geode-sdk/build-geode-mod@v2
         with:
           combine: true
           target: ${{ matrix.config.target }}
-          # ЭТОТ ПАРАМЕТР МЫ ДОБАВИЛИ: он заставит Geode CLI собрать проект самому, в обход капризов find_package!
-          cli: true
 
   package:
     name: Package builds
@@ -36,7 +36,7 @@ jobs:
     needs: ['build']
 
     steps:
-      - uses: geode-sdk/build-geode-mod/combine@main
+      - uses: geode-sdk/build-geode-mod/combine@v2
         id: build
 
       - uses: actions/upload-artifact@v4
