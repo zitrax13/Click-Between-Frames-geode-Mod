@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
 
+# 1. Подключаем базовый Geode SDK
+find_package(Geode REQUIRED)
+
 project(ClickBetweenFrames)
 
-# Создаем библиотеку (мод) напрямую из твоего main.cpp
+# 2. Создаем библиотеку из твоего main.cpp
 add_library(${PROJECT_NAME} SHARED main.cpp)
 
-# Больше никаких include! XMake и Geode CLI сами подхватят эту команду
-setup_geode_mod(${PROJECT_NAME})
+# 3. Новая правильная команда для сборки .geode файла в версии 2.207
+geode_mod(ClickBetweenFrames)
